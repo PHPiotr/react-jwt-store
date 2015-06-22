@@ -1,0 +1,6 @@
+test:
+  post:
+    - npm run cover
+general:
+  artifacts:
+    - "coverage"
