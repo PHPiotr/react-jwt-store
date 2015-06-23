@@ -1,0 +1,65 @@
+{
+  "name": "react-jwt-store",
+  "version": "1.0.0",
+  "description": "React JWT store",
+  "license": "MIT",
+  "author": "Seth Carney",
+  "keywords": [
+    "react",
+    "jwt"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "run-coverage": "istanbul cover --include-all-sources _mocha -- --compilers js:babel/register",
+    "check-coverage": "istanbul check-coverage --statements 100 --branches 100 --lines 100 --functions 100",
+    "cover": "npm run run-coverage && npm run check-coverage",
+    "lint": "eslint --ignore-path .gitignore .",
+    "test": "npm run lint && mocha --compilers js:babel/register"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lanetix/react-jwt-store.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lanetix/react-jwt-store/issues"
+  },
+  "homepage": "https://github.com/lanetix/react-jwt-store#readme",
+  "devDependencies": {
+    "babel": "^5.6.3",
+    "eslint": "^0.23.0",
+    "eslint-plugin-nodeca": "^1.0.3",
+    "eslint-plugin-react": "^2.5.2",
+    "istanbul": "^0.3.15",
+    "lodash": "^3.9.3",
+    "mocha": "^2.2.5",
+    "sinon": "^1.15.3"
+  },
+  "dependencies": {
+    "cookie-monster": "0.0.7",
+    "jwt-decode": "^1.1.1",
+    "xtend": "^4.0.0"
+  },
+  "browserify": {
+    "transform": [
+      [
+        "babelify",
+        {
+          "blacklist": [
+            "regenerator"
+          ],
+          "ignore": [
+            "browserify-shim"
+          ],
+          "optional": [
+            "es6.arrowFunctions",
+            "es6.blockScoping",
+            "es6.classes",
+            "es6.properties.shorthand",
+            "es6.spread",
+            "es6.templateLiterals"
+          ]
+        }
+      ]
+    ]
+  }
+}
