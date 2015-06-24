@@ -34,6 +34,11 @@ describe('Token Store', () => {
       assert.equal(user.last_name, 'Atkins');
     });
 
+    it('should return user id', () => {
+      let id = tokenStore.getUserId();
+      assert.equal(id, 2751055);
+    });
+
     it('should return token', () => {
       let t = tokenStore.getToken();
       assert.equal(token, t);
