@@ -18,6 +18,10 @@ module.exports = (options) => {
 
     getUser() {
       return user;
+    },
+
+    getUserId() {
+      return user.id;
     }
   }, EventEmitter.prototype);
 };
