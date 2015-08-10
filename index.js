@@ -1,15 +1,16 @@
 'use strict';
 
-let extend = require('xtend'),
+const extend = require('xtend'),
   cookie = require('cookie-monster'),
   decode = require('jwt-decode'),
-  EventEmitter = require('events').EventEmitter;
+  EventEmitter = require('events').EventEmitter,
+  Immutable = require('immutable');
 
 module.exports = (options) => {
   options = extend({ cookie: 'XSRF-TOKEN' }, options);
 
-  let token = cookie.get(options.cookie),
-    user = decode(token);
+  const token = Immutable.fromJS(cookie.get(options.cookie)),
+    user = Immutable.fromJS(decode(token));
 
   return extend({
     getToken() {
