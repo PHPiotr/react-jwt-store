@@ -15,7 +15,7 @@ describe('Token Store', () => {
       GLOBAL.document = {};
       require('cookie-monster').set('XSRF-TOKEN', token);
 
-      tokenStore = require('../')();
+      tokenStore = require('../src')();
     });
 
     afterEach(() => {
@@ -56,7 +56,7 @@ describe('Token Store', () => {
       GLOBAL.document = {};
       require('cookie-monster').set('NOT-XSRF-TOKEN', token);
 
-      tokenStore = require('../')({ cookie: 'NOT-XSRF-TOKEN' });
+      tokenStore = require('../src')({ cookie: 'NOT-XSRF-TOKEN' });
     });
 
     afterEach(() => {
