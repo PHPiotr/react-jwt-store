@@ -13,7 +13,7 @@
     "check-coverage": "istanbul check-coverage --statements 100 --branches 100 --lines 100 --functions 100",
     "compile": "babel src --out-dir lib",
     "cover": "npm run run-coverage && npm run check-coverage",
-    "lint": "eslint --ignore-path .gitignore .",
+    "lint": "standard",
     "prepublish": "npm run compile",
     "run-coverage": "istanbul cover -x lib/**/*.* --include-all-sources _mocha -- --compilers js:babel/register",
     "test": "npm run lint && mocha --compilers js:babel/register"
@@ -28,17 +28,29 @@
   "homepage": "https://github.com/lanetix/react-jwt-store#readme",
   "devDependencies": {
     "babel": "^5.6.3",
+    "babel-eslint": "^4.1.5",
     "eslint": "^0.23.0",
-    "eslint-plugin-nodeca": "^1.0.3",
-    "eslint-plugin-react": "^2.5.2",
     "istanbul": "^0.3.15",
     "lodash": "^3.9.3",
     "mocha": "^2.2.5",
-    "sinon": "^1.15.3"
+    "sinon": "^1.15.3",
+    "standard": "^5.4.1"
   },
   "dependencies": {
     "cookie-monster": "0.0.7",
     "jwt-decode": "^1.1.1",
     "xtend": "^4.0.0"
+  },
+  "babel": {
+    "stage": 0
+  },
+  "standard": {
+    "parser": "babel-eslint",
+    "globals": [
+      "describe",
+      "beforeEach",
+      "afterEach",
+      "it"
+    ]
   }
 }
