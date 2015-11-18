@@ -1,27 +1,29 @@
-'use strict';
+'use strict'
 
-let extend = require('xtend'),
-  cookie = require('cookie-monster'),
-  decode = require('jwt-decode'),
-  EventEmitter = require('events').EventEmitter;
+import extend from 'xtend'
+import cookie from 'cookie-monster'
+import decode from 'jwt-decode'
+import events from 'events'
+
+const EventEmitter = events.EventEmitter
 
 module.exports = (options) => {
-  options = extend({ cookie: 'XSRF-TOKEN' }, options);
+  options = extend({ cookie: 'XSRF-TOKEN' }, options)
 
-  let token = cookie.get(options.cookie),
-    user = decode(token);
+  let token = cookie.get(options.cookie)
+  let user = decode(token)
 
   return extend({
-    getToken() {
-      return token;
+    getToken () {
+      return token
     },
 
-    getUser() {
-      return user;
+    getUser () {
+      return user
     },
 
-    getUserId() {
-      return user.id;
+    getUserId () {
+      return user.id
     }
-  }, EventEmitter.prototype);
-};
+  }, EventEmitter.prototype)
+}
