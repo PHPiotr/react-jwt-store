@@ -9,20 +9,22 @@ const EventEmitter = events.EventEmitter
 
 const canWarn = () => console && console.warn && typeof console.warn === 'function'
 
+const decodeToken = token => {
+  if (token) {
+    try {
+      return decode(token)
+    } catch (e) {
+      canWarn() && console.warn(`Invalid JWT: ${token}`)
+      return void 0
+    }
+  }
+}
+
 module.exports = (options) => {
   options = extend({ cookie: 'XSRF-TOKEN' }, options)
 
-  let token = cookie.get(options.cookie)
-  let user
-
-  if (token) {
-    try {
-      user = decode(token)
-    } catch (e) {
-      user = void 0
-      canWarn() && console.warn(`Invalid JWT: ${token}`)
-    }
-  }
+  let token = cookie.get && cookie.get(options.cookie)
+  let user = decodeToken(token)
 
   return extend({
     getToken () {
@@ -35,6 +37,11 @@ module.exports = (options) => {
 
     getUserId () {
       return user ? user.id : void 0
+    },
+
+    setToken (newToken) {
+      token = newToken
+      user = decodeToken(token)
     }
   }, EventEmitter.prototype)
 }

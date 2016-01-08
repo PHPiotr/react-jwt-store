@@ -17,6 +17,15 @@ describe('Token Store', () => {
     delete GLOBAL.document
   })
 
+  it('should set user after no token is present', () => {
+    const tokenStore = require('../src')()
+    tokenStore.setToken(token)
+    let user = tokenStore.getUser()
+
+    assert.equal(user.first_name, 'Mike')
+    assert.equal(user.last_name, 'Atkins')
+  })
+
   describe('sad path', () => {
     it('should not blow up when cookie is not present', () => {
       let tokenStore
