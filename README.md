@@ -29,6 +29,12 @@ class someComponent extends React.Component {
 }
 ```
 
+### Set the token
+You can set the token without interacting with cookies via the following.
+```javascript
+userStore.setToken('jwt')
+```
+
 ### Override Cookie Key
 
 By default, the JWT assumes the cookie key is `XSRF-TOKEN`. This can be overridden
