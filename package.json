@@ -16,7 +16,7 @@
     "lint": "standard",
     "prepublish": "npm run compile",
     "run-coverage": "istanbul cover -x lib/**/*.* --include-all-sources _mocha -- --compilers js:babel/register",
-    "test": "npm run lint && mocha --compilers js:babel/register"
+    "test": "npm run lint && mocha"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/lanetix/react-jwt-store#readme",
   "devDependencies": {
+    "Base64": "^0.3.0",
     "babel": "^5.6.3",
     "babel-eslint": "^4.1.5",
     "bluebird": "^3.3.1",
