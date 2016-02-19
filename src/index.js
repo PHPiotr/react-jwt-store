@@ -32,25 +32,8 @@ module.exports = (options) => {
   }
 
   let user
-  const refreshToken = (result) => {
-    token = result
-    user = decodeToken(token)
-  }
-  if (!token && options.refresh) {
-    options.refresh()
-    .then(refreshToken)
-  } else {
-    user = decodeToken(token)
-  }
 
-  let expDate = user ? new Date(user.exp * 1000) : null
-
-  if (expDate < new Date() && options.refresh) {
-    options.refresh()
-    .then(refreshToken)
-  }
-
-  return extend({
+  const tokenStore = extend({
     getToken () {
       return token
     },
@@ -66,6 +49,23 @@ module.exports = (options) => {
     setToken (newToken) {
       token = newToken
       user = decodeToken(token)
+      this.emit('Token received')
     }
   }, EventEmitter.prototype)
+
+  if (!token && options.refresh) {
+    options.refresh()
+    .then(tokenStore.setToken.bind(tokenStore))
+  } else {
+    user = decodeToken(token)
+  }
+
+  let expDate = user ? new Date(user.exp * 1000) : null
+
+  if (expDate < new Date() && options.refresh) {
+    options.refresh()
+    .then(tokenStore.setToken.bind(tokenStore))
+  }
+
+  return tokenStore
 }

@@ -37,14 +37,17 @@ describe('Token Store', () => {
     assert.equal(user.last_name, 'Atkins')
   })
 
-  it('if no token call refresh & set token', () => {
+  it('if no token call refresh & set token', done => {
     const tokenStore = require('../src')({refresh: () =>
       bluebird.resolve(token)
     })
-    const user = tokenStore.getUser()
+    tokenStore.on('Token received', () => {
+      const user = tokenStore.getUser()
 
-    assert.equal(user.first_name, 'Mike')
-    assert.equal(user.last_name, 'Atkins')
+      assert.equal(user.first_name, 'Mike')
+      assert.equal(user.last_name, 'Atkins')
+      done()
+    })
   })
 
   it('if token is expired, call refresh & set token', () => {
