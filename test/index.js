@@ -3,7 +3,6 @@
 import assert from 'assert'
 import { btoa } from 'Base64'
 import decode from 'jwt-decode'
-import extend from 'xtend'
 import token from './data/token'
 import ls from 'local-storage'
 import bluebird from 'bluebird'
@@ -23,7 +22,7 @@ describe('Token Store', () => {
   beforeEach(() => {
     // hacky adjustment of expiration of the token
     const decoded = decode(token)
-    extend(decoded, { exp: (Date.now() + 100000) / 1000 })
+    decoded.exp = (Date.now() + 1000) / 1000
     const [head, , sig] = token.split('.')
     updatedToken = `${head}.${btoa(JSON.stringify(decoded))}.${sig}`
   })
@@ -82,7 +81,7 @@ describe('Token Store', () => {
     })
   })
 
-  it.skip('if token valid, leave as is', () => {
+  it('if token valid, leave as is', () => {
     ls.set(localStorageKey, updatedToken)
     const tokenStore = require('../src')({
       localStorageKey,
@@ -95,7 +94,21 @@ describe('Token Store', () => {
     assert.equal(user.last_name, 'Atkins')
   })
 
-  it('it token to expire soon, refresh after interval')
+  it('it token to expire soon, refresh after interval', done => {
+    ls.set(localStorageKey, updatedToken)
+    const tokenStore = require('../src')({
+      localStorageKey,
+      refresh: () => bluebird.resolve(updatedToken),
+      refreshInterval: 1000
+    })
+    tokenStore.on('Token received', () => {
+      const user = tokenStore.getUser()
+
+      assert.equal(user.first_name, 'Mike')
+      assert.equal(user.last_name, 'Atkins')
+      done()
+    })
+  })
 
   describe('sad path', () => {
     it('should not blow up when cookie is not present', () => {

@@ -53,19 +53,27 @@ module.exports = (options) => {
     }
   }, EventEmitter.prototype)
 
-  if (!token && options.refresh) {
-    options.refresh()
-    .then(tokenStore.setToken.bind(tokenStore))
-  } else {
-    user = decodeToken(token)
+  const refreshToken = () => {
+    if (!token && options.refresh) {
+      options.refresh()
+      .then(tokenStore.setToken.bind(tokenStore))
+    } else {
+      user = decodeToken(token)
+    }
+
+    let expDate = user ? new Date(user.exp * 1000) : null
+    if (expDate && expDate < new Date() && options.refresh) {
+      options.refresh()
+      .then(tokenStore.setToken.bind(tokenStore))
+    }
   }
 
-  let expDate = user ? new Date(user.exp * 1000) : null
+  refreshToken()
+  const refreshInterval = options.refreshInterval
+  ? options.refreshInterval
+  : (60 * 1000)
 
-  if (expDate && expDate < new Date() && options.refresh) {
-    options.refresh()
-    .then(tokenStore.setToken.bind(tokenStore))
-  }
+  window.setInterval(refreshToken, refreshInterval)
 
   return tokenStore
 }
