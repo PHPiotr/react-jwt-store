@@ -50,14 +50,20 @@ describe('Token Store', () => {
     })
   })
 
-  it('if token is expired, call refresh & set token', () => {
-    const tokenStore = require('../src')({refresh: () =>
-      bluebird.resolve(token)
+  it('if token is expired, call refresh & set token', done => {
+    ls.set('coolKey', token)
+    const tokenStore = require('../src')({
+      localStorageKey: 'coolKey',
+      refresh: () =>
+        bluebird.resolve(token)
     })
-    const user = tokenStore.getUser()
+    tokenStore.on('Token received', () => {
+      const user = tokenStore.getUser()
 
-    assert.equal(user.first_name, 'Mike')
-    assert.equal(user.last_name, 'Atkins')
+      assert.equal(user.first_name, 'Mike')
+      assert.equal(user.last_name, 'Atkins')
+      done()
+    })
   })
 
   it('if token valid, leave as is')
