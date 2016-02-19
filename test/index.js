@@ -2,6 +2,8 @@
 
 import assert from 'assert'
 import token from './data/token'
+import ls from 'local-storage'
+import bluebird from 'bluebird'
 
 describe('Token Store', () => {
   beforeEach(() => {
@@ -25,6 +27,39 @@ describe('Token Store', () => {
     assert.equal(user.first_name, 'Mike')
     assert.equal(user.last_name, 'Atkins')
   })
+
+  it('should get the token out of local storage', () => {
+    ls.set('coolKey', token)
+    const tokenStore = require('../src')({localStorageKey: 'coolKey'})
+    const user = tokenStore.getUser()
+
+    assert.equal(user.first_name, 'Mike')
+    assert.equal(user.last_name, 'Atkins')
+  })
+
+  it('if no token call refresh & set token', () => {
+    const tokenStore = require('../src')({refresh: () =>
+      bluebird.resolve(token)
+    })
+    const user = tokenStore.getUser()
+
+    assert.equal(user.first_name, 'Mike')
+    assert.equal(user.last_name, 'Atkins')
+  })
+
+  it('if token is expired, call refresh & set token', () => {
+    const tokenStore = require('../src')({refresh: () =>
+      bluebird.resolve(token)
+    })
+    const user = tokenStore.getUser()
+
+    assert.equal(user.first_name, 'Mike')
+    assert.equal(user.last_name, 'Atkins')
+  })
+
+  it('if token valid, leave as is')
+
+  it('it token to expire soon, refresh after interval')
 
   describe('sad path', () => {
     it('should not blow up when cookie is not present', () => {

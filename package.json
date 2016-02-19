@@ -29,16 +29,17 @@
   "devDependencies": {
     "babel": "^5.6.3",
     "babel-eslint": "^4.1.5",
+    "bluebird": "^3.3.1",
     "eslint": "^0.23.0",
     "istanbul": "^0.3.15",
     "lodash": "^3.9.3",
     "mocha": "^2.2.5",
-    "sinon": "^1.15.3",
     "standard": "^5.4.1"
   },
   "dependencies": {
     "cookie-monster": "0.0.7",
-    "jwt-decode": "^1.1.1",
+    "jwt-decode": "^1.5.1",
+    "local-storage": "^1.4.2",
     "xtend": "^4.0.0"
   },
   "babel": {
