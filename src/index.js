@@ -4,6 +4,7 @@ import extend from 'xtend'
 import cookie from 'cookie-monster'
 import decode from 'jwt-decode'
 import events from 'events'
+import ls from 'local-storage'
 
 const EventEmitter = events.EventEmitter
 
@@ -23,10 +24,13 @@ const decodeToken = token => {
 module.exports = (options) => {
   options = extend({ cookie: 'XSRF-TOKEN' }, options)
 
-  let token = cookie.get && cookie.get(options.cookie)
-  let user = decodeToken(token)
+  let token = options.localStorageKey
+    ? ls.get(options.localStorageKey)
+    : cookie.get && cookie.get(options.cookie)
 
-  return extend({
+  let user
+
+  const tokenStore = extend({
     getToken () {
       return token
     },
@@ -42,6 +46,31 @@ module.exports = (options) => {
     setToken (newToken) {
       token = newToken
       user = decodeToken(token)
+      this.emit('Token received')
     }
   }, EventEmitter.prototype)
+
+  const refreshToken = () => {
+    if (!token && options.refresh) {
+      options.refresh()
+      .then(tokenStore.setToken.bind(tokenStore))
+    } else {
+      user = decodeToken(token)
+    }
+
+    let expDate = user ? new Date(user.exp * 1000) : null
+    if (expDate && expDate < new Date() && options.refresh) {
+      options.refresh()
+      .then(tokenStore.setToken.bind(tokenStore))
+    }
+  }
+
+  refreshToken()
+  const refreshInterval = options.refreshInterval
+    ? options.refreshInterval
+    : (60000)
+
+  window.setInterval(refreshToken, refreshInterval)
+
+  return tokenStore
 }

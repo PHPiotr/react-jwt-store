@@ -1,9 +1,16 @@
 'use strict'
 
 import assert from 'assert'
+import { btoa } from 'Base64'
+import decode from 'jwt-decode'
 import token from './data/token'
+import ls from 'local-storage'
+import bluebird from 'bluebird'
 
 describe('Token Store', () => {
+  const localStorageKey = 'coolKey'
+  let updatedToken
+
   beforeEach(() => {
     // HACK around https://github.com/auth0/jwt-decode/issues/5
     GLOBAL.window = GLOBAL
@@ -12,9 +19,19 @@ describe('Token Store', () => {
     GLOBAL.document = {}
   })
 
+  beforeEach(() => {
+    // hacky adjustment of expiration of the token
+    const decoded = decode(token)
+    decoded.exp = (Date.now() + 1000) / 1000
+    const [head, , sig] = token.split('.')
+    updatedToken = `${head}.${btoa(JSON.stringify(decoded))}.${sig}`
+  })
+
   afterEach(() => {
     delete GLOBAL.window
     delete GLOBAL.document
+
+    ls.remove(localStorageKey)
   })
 
   it('should set user after no token is present', () => {
@@ -24,6 +41,73 @@ describe('Token Store', () => {
 
     assert.equal(user.first_name, 'Mike')
     assert.equal(user.last_name, 'Atkins')
+  })
+
+  it('should get the token out of local storage', () => {
+    ls.set(localStorageKey, token)
+    const tokenStore = require('../src')({localStorageKey})
+    const user = tokenStore.getUser()
+
+    assert.equal(user.first_name, 'Mike')
+    assert.equal(user.last_name, 'Atkins')
+  })
+
+  it('if no token call refresh & set token', done => {
+    const tokenStore = require('../src')({refresh: () =>
+      bluebird.resolve(updatedToken)
+    })
+    tokenStore.on('Token received', () => {
+      const user = tokenStore.getUser()
+
+      assert.equal(user.first_name, 'Mike')
+      assert.equal(user.last_name, 'Atkins')
+      done()
+    })
+  })
+
+  it('if token is expired, call refresh & set token', done => {
+    ls.set(localStorageKey, token)
+    const tokenStore = require('../src')({
+      localStorageKey,
+      refresh: () =>
+        bluebird.resolve(updatedToken)
+    })
+    tokenStore.on('Token received', () => {
+      const user = tokenStore.getUser()
+
+      assert.equal(user.first_name, 'Mike')
+      assert.equal(user.last_name, 'Atkins')
+      done()
+    })
+  })
+
+  it('if token valid, leave as is', () => {
+    ls.set(localStorageKey, updatedToken)
+    const tokenStore = require('../src')({
+      localStorageKey,
+      refresh: () => assert.fail('should not be called')
+    })
+
+    const user = tokenStore.getUser()
+
+    assert.equal(user.first_name, 'Mike')
+    assert.equal(user.last_name, 'Atkins')
+  })
+
+  it('it token to expire soon, refresh after interval', done => {
+    ls.set(localStorageKey, updatedToken)
+    const tokenStore = require('../src')({
+      localStorageKey,
+      refresh: () => bluebird.resolve(updatedToken),
+      refreshInterval: 1000
+    })
+    tokenStore.on('Token received', () => {
+      const user = tokenStore.getUser()
+
+      assert.equal(user.first_name, 'Mike')
+      assert.equal(user.last_name, 'Atkins')
+      done()
+    })
   })
 
   describe('sad path', () => {
