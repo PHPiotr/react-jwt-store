@@ -24,12 +24,9 @@ const decodeToken = token => {
 module.exports = (options) => {
   options = extend({ cookie: 'XSRF-TOKEN' }, options)
 
-  let token
-  if ('localStorageKey' in options) {
-    token = ls.get(options.localStorageKey)
-  } else {
-    token = cookie.get && cookie.get(options.cookie)
-  }
+  let token = options.localStorageKey
+    ? ls.get(options.localStorageKey)
+    : cookie.get && cookie.get(options.cookie)
 
   let user
 
