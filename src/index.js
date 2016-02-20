@@ -70,8 +70,8 @@ module.exports = (options) => {
 
   refreshToken()
   const refreshInterval = options.refreshInterval
-  ? options.refreshInterval
-  : (60 * 1000)
+    ? options.refreshInterval
+    : (60000)
 
   window.setInterval(refreshToken, refreshInterval)
 
