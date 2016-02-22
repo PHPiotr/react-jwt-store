@@ -70,7 +70,7 @@ module.exports = (options) => {
     ? options.refreshInterval
     : (60000)
 
-  window.setInterval(refreshToken, refreshInterval)
+  setInterval(refreshToken, refreshInterval)
 
   return tokenStore
 }
