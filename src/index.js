@@ -58,17 +58,17 @@ module.exports = (options) => {
       user = decodeToken(token)
     }
 
-    let expDate = user ? new Date(user.exp * 1000) : null
+    let expDate = user ? new Date(user.exp * 1000 - 2 * refreshInterval) : null
     if (expDate && expDate < new Date() && options.refresh) {
       options.refresh()
       .then(tokenStore.setToken.bind(tokenStore))
     }
   }
 
-  refreshToken()
   const refreshInterval = options.refreshInterval
     ? options.refreshInterval
     : (60000)
+  refreshToken()
 
   setInterval(refreshToken, refreshInterval)
 

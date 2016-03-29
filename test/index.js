@@ -7,6 +7,14 @@ import token from './data/token'
 import ls from 'local-storage'
 import bluebird from 'bluebird'
 
+const setTokenExp = (timestamp) => {
+  // hacky adjustment of expiration of the token
+  const decoded = decode(token)
+  decoded.exp = timestamp / 1000
+  const [head, , sig] = token.split('.')
+  return `${head}.${btoa(JSON.stringify(decoded))}.${sig}`
+}
+
 describe('Token Store', () => {
   const localStorageKey = 'coolKey'
   let updatedToken
@@ -20,11 +28,7 @@ describe('Token Store', () => {
   })
 
   beforeEach(() => {
-    // hacky adjustment of expiration of the token
-    const decoded = decode(token)
-    decoded.exp = (Date.now() + 1000) / 1000
-    const [head, , sig] = token.split('.')
-    updatedToken = `${head}.${btoa(JSON.stringify(decoded))}.${sig}`
+    updatedToken = setTokenExp(Date.now() + 1000)
   })
 
   afterEach(() => {
@@ -82,7 +86,7 @@ describe('Token Store', () => {
   })
 
   it('if token valid, leave as is', () => {
-    ls.set(localStorageKey, updatedToken)
+    ls.set(localStorageKey, setTokenExp(Date.now() + 100 * 60 * 1000))
     const tokenStore = require('../src')({
       localStorageKey,
       refresh: () => assert.fail('should not be called')
