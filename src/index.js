@@ -72,5 +72,7 @@ module.exports = (options) => {
 
   setInterval(refreshToken, refreshInterval)
 
+  tokenStore.refreshToken = () => refreshToken()
+
   return tokenStore
 }
