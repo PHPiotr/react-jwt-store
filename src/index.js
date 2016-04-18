@@ -47,6 +47,11 @@ module.exports = (options) => {
       token = newToken
       user = decodeToken(token)
       this.emit('Token received')
+    },
+
+    refreshToken () {
+      options.refresh()
+      .then(tokenStore.setToken.bind(tokenStore))
     }
   }, EventEmitter.prototype)
 
@@ -71,8 +76,6 @@ module.exports = (options) => {
   refreshToken()
 
   setInterval(refreshToken, refreshInterval)
-
-  tokenStore.refreshToken = () => refreshToken()
 
   return tokenStore
 }

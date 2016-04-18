@@ -4,6 +4,7 @@ import assert from 'assert'
 import { btoa } from 'Base64'
 import decode from 'jwt-decode'
 import token from './data/token'
+import tokenTimezone from './data/token-timezone'
 import ls from 'local-storage'
 import bluebird from 'bluebird'
 
@@ -98,7 +99,7 @@ describe('Token Store', () => {
     assert.equal(user.last_name, 'Atkins')
   })
 
-  it('it token to expire soon, refresh after interval', done => {
+  it('if token to expire soon, refresh after interval', done => {
     ls.set(localStorageKey, updatedToken)
     const tokenStore = require('../src')({
       localStorageKey,
@@ -112,6 +113,25 @@ describe('Token Store', () => {
       assert.equal(user.last_name, 'Atkins')
       done()
     })
+  })
+
+  it.only('refreshes the token and sets it', done => {
+    ls.set(localStorageKey, setTokenExp(Date.now() + 100 * 60 * 1000))
+    const tokenStore = require('../src')({
+      localStorageKey,
+      refresh: () => bluebird.resolve(tokenTimezone)
+    })
+
+    assert.equal(tokenStore.getUser().timezone, undefined)
+
+    tokenStore.on('Token received', () => {
+      const user = tokenStore.getUser()
+
+      assert.equal(user.timezone, 'UTC')
+      done()
+    })
+
+    tokenStore.refreshToken()
   })
 
   describe('sad path', () => {
