@@ -115,7 +115,7 @@ describe('Token Store', () => {
     })
   })
 
-  it.only('refreshes the token and sets it', done => {
+  it('refreshes the token and sets it', done => {
     ls.set(localStorageKey, setTokenExp(Date.now() + 100 * 60 * 1000))
     const tokenStore = require('../src')({
       localStorageKey,
