@@ -47,13 +47,17 @@ module.exports = (options) => {
       token = newToken
       user = decodeToken(token)
       this.emit('Token received')
+    },
+
+    refreshToken () {
+      options.refresh()
+      .then(tokenStore.setToken.bind(tokenStore))
     }
   }, EventEmitter.prototype)
 
   const refreshToken = () => {
     if (!token && options.refresh) {
-      options.refresh()
-      .then(tokenStore.setToken.bind(tokenStore))
+      tokenStore.refreshToken()
     } else {
       user = decodeToken(token)
     }

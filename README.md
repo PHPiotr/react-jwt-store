@@ -35,6 +35,12 @@ You can set the token without interacting with cookies via the following.
 userStore.setToken('jwt')
 ```
 
+### Refresh the token
+You can force a refresh of the token via the following.
+```javascript
+userStore.refreshToken()
+```
+
 ### Override Cookie Key
 
 By default, the JWT assumes the cookie key is `XSRF-TOKEN`. This can be overridden
