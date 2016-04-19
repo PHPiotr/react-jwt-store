@@ -57,8 +57,7 @@ module.exports = (options) => {
 
   const refreshToken = () => {
     if (!token && options.refresh) {
-      options.refresh()
-      .then(tokenStore.setToken.bind(tokenStore))
+      tokenStore.refreshToken()
     } else {
       user = decodeToken(token)
     }
