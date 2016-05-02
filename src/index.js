@@ -24,11 +24,18 @@ const decodeToken = token => {
 module.exports = (options) => {
   options = extend({ cookie: 'XSRF-TOKEN' }, options)
 
-  let token = options.localStorageKey
-    ? ls.get(options.localStorageKey)
-    : cookie.get && cookie.get(options.cookie)
-
   let user
+  let token
+
+  if (options.localStorageKey) {
+    try {
+      token = ls.get(options.localStorageKey)
+    } catch (e) {
+      console.warn('Unable to get token', e)
+    }
+  } else {
+    token = cookie.get && cookie.get(options.cookie)
+  }
 
   const tokenStore = extend({
     getToken () {
