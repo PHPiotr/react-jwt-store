@@ -57,6 +57,14 @@ describe('Token Store', () => {
     assert.equal(user.last_name, 'Atkins')
   })
 
+  it('should catch an exception token is not present in local storage', () => {
+    ls.set(localStorageKey, undefined)
+    const tokenStore = require('../src')({localStorageKey})
+    const token = tokenStore.getToken()
+
+    assert.equal(token, undefined)
+  })
+
   it('if no token call refresh & set token', done => {
     const tokenStore = require('../src')({refresh: () =>
       bluebird.resolve(updatedToken)
