@@ -30,7 +30,7 @@ module.exports = (options) => {
   if (options.localStorageKey) {
     try {
       token = ls.get(options.localStorageKey)
-    } catch(e) {
+    } catch (e) {
       console.warn('Unable to get token', e)
     }
   } else {
