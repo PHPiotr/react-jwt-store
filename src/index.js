@@ -71,7 +71,7 @@ module.exports = (options) => {
 
     let expDate = user ? new Date(user.exp * 1000 - 2 * refreshInterval) : null
     if (expDate && expDate < new Date() && options.refresh) {
-      options.refresh()
+      options.refresh(token)
       .then(tokenStore.setToken.bind(tokenStore))
     }
   }
