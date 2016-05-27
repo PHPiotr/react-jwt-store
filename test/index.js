@@ -78,6 +78,18 @@ describe('Token Store', () => {
     })
   })
 
+  it('if token is expired, call refresh with expired token', done => {
+    ls.set(localStorageKey, token)
+    require('../src')({
+      localStorageKey,
+      refresh: (t) => {
+        assert.equal(t, token)
+        done()
+        return bluebird.resolve(updatedToken)
+      }
+    })
+  })
+
   it('if token is expired, call refresh & set token', done => {
     ls.set(localStorageKey, token)
     const tokenStore = require('../src')({
