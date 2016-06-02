@@ -49,3 +49,8 @@ by passing `cookie` on the `options` hash:
 ```javascript
   let userStore = require('react-jwt-store')({ cookie: 'NOT-XSRF-TOKEN'});
 ```
+
+### Set a logger
+
+By default, the store does not log anything, but if you pass in a `console`
+compatible logger, the store will log the state of the token as it changes.
