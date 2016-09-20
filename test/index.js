@@ -41,41 +41,42 @@ describe('Token Store', () => {
 
   it('should set user after no token is present', () => {
     const tokenStore = require('../src')()
-    tokenStore.setToken(token)
-    let user = tokenStore.getUser()
+    tokenStore.on('Token received', (_, user) => {
+      assert.equal(user.first_name, 'Mike')
+      assert.equal(user.last_name, 'Atkins')
+    })
 
-    assert.equal(user.first_name, 'Mike')
-    assert.equal(user.last_name, 'Atkins')
+    tokenStore.init()
+    tokenStore.setToken(token)
   })
 
   it('should get the token out of local storage', () => {
     ls.set(localStorageKey, token)
     const tokenStore = require('../src')({localStorageKey})
-    const user = tokenStore.getUser()
-
-    assert.equal(user.first_name, 'Mike')
-    assert.equal(user.last_name, 'Atkins')
+    tokenStore.on('Token received', (_, user) => {
+      assert.equal(user.first_name, 'Mike')
+      assert.equal(user.last_name, 'Atkins')
+    })
+    tokenStore.init()
   })
 
   it('should catch an exception token is not present in local storage', () => {
     ls.set(localStorageKey, undefined)
     const tokenStore = require('../src')({localStorageKey})
-    const token = tokenStore.getToken()
-
-    assert.equal(token, undefined)
+    tokenStore.on('Token received', assert.fail)
+    tokenStore.init()
   })
 
   it('if no token call refresh & set token', done => {
     const tokenStore = require('../src')({refresh: () =>
       bluebird.resolve(updatedToken)
     })
-    tokenStore.on('Token received', () => {
-      const user = tokenStore.getUser()
-
+    tokenStore.on('Token received', (_, user) => {
       assert.equal(user.first_name, 'Mike')
       assert.equal(user.last_name, 'Atkins')
       done()
     })
+    tokenStore.init()
   })
 
   it('if token is expired, call refresh with expired token', done => {
@@ -87,7 +88,7 @@ describe('Token Store', () => {
         done()
         return bluebird.resolve(updatedToken)
       }
-    })
+    }).init()
   })
 
   it('if token is expired, call refresh & set token', done => {
@@ -97,13 +98,12 @@ describe('Token Store', () => {
       refresh: () =>
         bluebird.resolve(updatedToken)
     })
-    tokenStore.on('Token received', () => {
-      const user = tokenStore.getUser()
-
+    tokenStore.on('Token received', (_, user) => {
       assert.equal(user.first_name, 'Mike')
       assert.equal(user.last_name, 'Atkins')
       done()
     })
+    tokenStore.init()
   })
 
   it('if token valid, leave as is', () => {
@@ -112,11 +112,11 @@ describe('Token Store', () => {
       localStorageKey,
       refresh: () => assert.fail('should not be called')
     })
-
-    const user = tokenStore.getUser()
-
-    assert.equal(user.first_name, 'Mike')
-    assert.equal(user.last_name, 'Atkins')
+    tokenStore.on('Token received', (_, user) => {
+      assert.equal(user.first_name, 'Mike')
+      assert.equal(user.last_name, 'Atkins')
+    })
+    tokenStore.init()
   })
 
   it('if token to expire soon, refresh after interval', done => {
@@ -126,13 +126,12 @@ describe('Token Store', () => {
       refresh: () => bluebird.resolve(updatedToken),
       refreshInterval: 1000
     })
-    tokenStore.on('Token received', () => {
-      const user = tokenStore.getUser()
-
+    tokenStore.on('Token received', (_, user) => {
       assert.equal(user.first_name, 'Mike')
       assert.equal(user.last_name, 'Atkins')
       done()
     })
+    tokenStore.init()
   })
 
   it('refreshes the token and sets it', done => {
@@ -144,13 +143,12 @@ describe('Token Store', () => {
 
     assert.equal(tokenStore.getUser().timezone, undefined)
 
-    tokenStore.on('Token received', () => {
-      const user = tokenStore.getUser()
-
+    tokenStore.on('Token received', (_, user) => {
       assert.equal(user.timezone, 'UTC')
       done()
     })
 
+    tokenStore.init()
     tokenStore.refreshToken()
   })
 
@@ -158,9 +156,7 @@ describe('Token Store', () => {
     it('should not blow up when cookie is not present', () => {
       let tokenStore
       assert.doesNotThrow(() => tokenStore = require('../src')())
-      assert.ok(tokenStore.getToken() === void 0)
-      assert.ok(tokenStore.getUser() === void 0)
-      assert.ok(tokenStore.getUserId() === void 0)
+      assert.doesNotThrow(() => tokenStore.init())
     })
 
     it('should not blow up when cookie is invalid', () => {
@@ -169,9 +165,7 @@ describe('Token Store', () => {
 
       let tokenStore
       assert.doesNotThrow(() => tokenStore = require('../src')())
-      assert.ok(tokenStore.getToken() === token)
-      assert.ok(tokenStore.getUser() === void 0)
-      assert.ok(tokenStore.getUserId() === void 0)
+      assert.doesNotThrow(() => tokenStore.init())
     })
   })
 
