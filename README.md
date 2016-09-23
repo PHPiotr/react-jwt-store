@@ -5,28 +5,20 @@ React JWT user store
 ## Usage
 
 ```javascript
-let React = require('react'),
-  userStore = require('react-jwt-store')();
+const userStore = require('react-jwt-store')()
 
-class someComponent extends React.Component {
-  constructor() {
-    super(props);
+userStore.on('Token received', (token, user) => {
+  console.log(token, user)
+})
 
-    this.state = {
-      user: userStore.getUser(),
-      token: userStore.getToken()
-    };
-  }
-  render() {
-    let user = this.state.user,
-      token = this.state.token;
+userStore.init()
+```
 
-    return (
-      <div>
-        <h1>{user}</h1>
-        <h2>{token}</h1>
-  }
-}
+### Initialize
+In order to trigger the store's refresh mechanism and send data to any event
+handlers, you must call the `init` method.
+```javascript
+userStore.init()
 ```
 
 ### Set the token
