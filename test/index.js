@@ -22,10 +22,10 @@ describe('Token Store', () => {
 
   beforeEach(() => {
     // HACK around https://github.com/auth0/jwt-decode/issues/5
-    GLOBAL.window = GLOBAL
+    global.window = global
 
     // HACK around cookie monster returning undefined when document isn't there
-    GLOBAL.document = {}
+    global.document = {}
   })
 
   beforeEach(() => {
@@ -33,49 +33,50 @@ describe('Token Store', () => {
   })
 
   afterEach(() => {
-    delete GLOBAL.window
-    delete GLOBAL.document
+    delete global.window
+    delete global.document
 
     ls.remove(localStorageKey)
   })
 
   it('should set user after no token is present', () => {
     const tokenStore = require('../src')()
-    tokenStore.setToken(token)
-    let user = tokenStore.getUser()
+    tokenStore.on('Token received', (_, user) => {
+      assert.equal(user.first_name, 'Mike')
+      assert.equal(user.last_name, 'Atkins')
+    })
 
-    assert.equal(user.first_name, 'Mike')
-    assert.equal(user.last_name, 'Atkins')
+    tokenStore.init()
+    tokenStore.setToken(token)
   })
 
   it('should get the token out of local storage', () => {
     ls.set(localStorageKey, token)
     const tokenStore = require('../src')({localStorageKey})
-    const user = tokenStore.getUser()
-
-    assert.equal(user.first_name, 'Mike')
-    assert.equal(user.last_name, 'Atkins')
+    tokenStore.on('Token received', (_, user) => {
+      assert.equal(user.first_name, 'Mike')
+      assert.equal(user.last_name, 'Atkins')
+    })
+    tokenStore.init()
   })
 
   it('should catch an exception token is not present in local storage', () => {
     ls.set(localStorageKey, undefined)
     const tokenStore = require('../src')({localStorageKey})
-    const token = tokenStore.getToken()
-
-    assert.equal(token, undefined)
+    tokenStore.on('Token received', assert.fail)
+    tokenStore.init()
   })
 
   it('if no token call refresh & set token', done => {
     const tokenStore = require('../src')({refresh: () =>
       bluebird.resolve(updatedToken)
     })
-    tokenStore.on('Token received', () => {
-      const user = tokenStore.getUser()
-
+    tokenStore.on('Token received', (_, user) => {
       assert.equal(user.first_name, 'Mike')
       assert.equal(user.last_name, 'Atkins')
       done()
     })
+    tokenStore.init()
   })
 
   it('if token is expired, call refresh with expired token', done => {
@@ -87,7 +88,7 @@ describe('Token Store', () => {
         done()
         return bluebird.resolve(updatedToken)
       }
-    })
+    }).init()
   })
 
   it('if token is expired, call refresh & set token', done => {
@@ -97,13 +98,13 @@ describe('Token Store', () => {
       refresh: () =>
         bluebird.resolve(updatedToken)
     })
-    tokenStore.on('Token received', () => {
-      const user = tokenStore.getUser()
-
+    let callCount = 0
+    tokenStore.on('Token received', (_, user) => {
       assert.equal(user.first_name, 'Mike')
       assert.equal(user.last_name, 'Atkins')
-      done()
+      if (++callCount === 2) { done() }
     })
+    tokenStore.init()
   })
 
   it('if token valid, leave as is', () => {
@@ -112,11 +113,11 @@ describe('Token Store', () => {
       localStorageKey,
       refresh: () => assert.fail('should not be called')
     })
-
-    const user = tokenStore.getUser()
-
-    assert.equal(user.first_name, 'Mike')
-    assert.equal(user.last_name, 'Atkins')
+    tokenStore.on('Token received', (_, user) => {
+      assert.equal(user.first_name, 'Mike')
+      assert.equal(user.last_name, 'Atkins')
+    })
+    tokenStore.init()
   })
 
   it('if token to expire soon, refresh after interval', done => {
@@ -126,13 +127,13 @@ describe('Token Store', () => {
       refresh: () => bluebird.resolve(updatedToken),
       refreshInterval: 1000
     })
-    tokenStore.on('Token received', () => {
-      const user = tokenStore.getUser()
-
+    let callCount = 0
+    tokenStore.on('Token received', (_, user) => {
       assert.equal(user.first_name, 'Mike')
       assert.equal(user.last_name, 'Atkins')
-      done()
+      if (++callCount === 2) { done() }
     })
+    tokenStore.init()
   })
 
   it('refreshes the token and sets it', done => {
@@ -142,15 +143,20 @@ describe('Token Store', () => {
       refresh: () => bluebird.resolve(tokenTimezone)
     })
 
-    assert.equal(tokenStore.getUser().timezone, undefined)
-
-    tokenStore.on('Token received', () => {
-      const user = tokenStore.getUser()
-
-      assert.equal(user.timezone, 'UTC')
-      done()
+    let callCount = 0
+    tokenStore.on('Token received', (_, user) => {
+      callCount++
+      if (callCount === 1) {
+        assert(!user.timezone)
+      } else if (callCount === 2) {
+        assert.equal(user.timezone, 'UTC')
+        done()
+      } else {
+        assert.fail('shouldn\'t be called more than twice')
+      }
     })
 
+    tokenStore.init()
     tokenStore.refreshToken()
   })
 
@@ -158,9 +164,7 @@ describe('Token Store', () => {
     it('should not blow up when cookie is not present', () => {
       let tokenStore
       assert.doesNotThrow(() => tokenStore = require('../src')())
-      assert.ok(tokenStore.getToken() === void 0)
-      assert.ok(tokenStore.getUser() === void 0)
-      assert.ok(tokenStore.getUserId() === void 0)
+      assert.doesNotThrow(() => tokenStore.init())
     })
 
     it('should not blow up when cookie is invalid', () => {
@@ -169,54 +173,50 @@ describe('Token Store', () => {
 
       let tokenStore
       assert.doesNotThrow(() => tokenStore = require('../src')())
-      assert.ok(tokenStore.getToken() === token)
-      assert.ok(tokenStore.getUser() === void 0)
-      assert.ok(tokenStore.getUserId() === void 0)
+      assert.doesNotThrow(() => tokenStore.init())
     })
   })
 
   describe('default cookie key', () => {
-    let tokenStore
+    let tokenFromStore
+    let user
 
     beforeEach(() => {
       require('cookie-monster').set('XSRF-TOKEN', token)
 
-      tokenStore = require('../src')()
+      const tokenStore = require('../src')()
+      tokenStore.on('Token received', (t, u) => {
+        tokenFromStore = t
+        user = u
+      })
+      tokenStore.init()
     })
 
     it('should get the XSRF-TOKEN and return it', () => {
-      assert.equal(tokenStore.getToken(), token)
+      assert.equal(tokenFromStore, token)
     })
 
     it('should return user', () => {
-      let user = tokenStore.getUser()
-
       assert.equal(user.first_name, 'Mike')
       assert.equal(user.last_name, 'Atkins')
-    })
-
-    it('should return user id', () => {
-      let id = tokenStore.getUserId()
-      assert.equal(id, 2751055)
-    })
-
-    it('should return token', () => {
-      let t = tokenStore.getToken()
-      assert.equal(token, t)
     })
   })
 
   describe('override cookie key', () => {
-    let tokenStore
+    let tokenFromStore
 
     beforeEach(() => {
       require('cookie-monster').set('NOT-XSRF-TOKEN', token)
 
-      tokenStore = require('../src')({ cookie: 'NOT-XSRF-TOKEN' })
+      const tokenStore = require('../src')({ cookie: 'NOT-XSRF-TOKEN' })
+      tokenStore.on('Token received', (t) => {
+        tokenFromStore = t
+      })
+      tokenStore.init()
     })
 
     it('should get the NOT-XSRF-TOKEN and return it', () => {
-      assert.equal(tokenStore.getToken(), token)
+      assert.equal(tokenFromStore, token)
     })
   })
 })

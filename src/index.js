@@ -31,43 +31,9 @@ module.exports = (options) => {
     }
   }
 
-  if (options.localStorageKey) {
-    try {
-      token = ls.get(options.localStorageKey)
-    } catch (e) {
-      logger.warn('[JWT store] Unable to get token', e)
-    }
-  } else {
-    token = cookie.get && cookie.get(options.cookie)
-  }
-  logger.info('[JWT store] created store with token', token)
-
-  const tokenStore = extend({
-    getToken () {
-      return token
-    },
-
-    getUser () {
-      return user
-    },
-
-    getUserId () {
-      return user ? user.id : void 0
-    },
-
-    setToken (newToken) {
-      logger.info('[JWT store] setting new token', newToken)
-      token = newToken
-      user = decodeToken(token)
-      this.emit('Token received')
-    },
-
-    refreshToken () {
-      logger.info('[JWT store] refreshing token', token)
-      options.refresh(token)
-      .then(tokenStore.setToken.bind(tokenStore))
-    }
-  }, EventEmitter.prototype)
+  const refreshInterval = options.refreshInterval
+    ? options.refreshInterval
+    : (60000)
 
   const refreshToken = () => {
     if (!token && options.refresh) {
@@ -82,12 +48,38 @@ module.exports = (options) => {
     }
   }
 
-  const refreshInterval = options.refreshInterval
-    ? options.refreshInterval
-    : (60000)
-  refreshToken()
+  const tokenStore = extend({
+    init () {
+      let token
+      if (options.localStorageKey) {
+        try {
+          token = ls.get(options.localStorageKey)
+        } catch (e) {
+          logger.warn('[JWT store] Unable to get token', e)
+        }
+      } else {
+        token = cookie.get && cookie.get(options.cookie)
+      }
 
-  setInterval(refreshToken, refreshInterval)
+      if (token) { this.setToken(token) }
+      refreshToken()
+
+      setInterval(refreshToken, refreshInterval)
+    },
+
+    setToken (newToken) {
+      logger.info('[JWT store] setting new token', newToken)
+      token = newToken
+      user = decodeToken(token)
+      this.emit('Token received', token, user)
+    },
+
+    refreshToken () {
+      logger.info('[JWT store] refreshing token', token)
+      options.refresh(token)
+      .then(tokenStore.setToken.bind(tokenStore))
+    }
+  }, EventEmitter.prototype)
 
   return tokenStore
 }
