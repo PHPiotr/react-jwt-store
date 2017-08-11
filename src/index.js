@@ -12,6 +12,7 @@ const noop = function () { }
 module.exports = (options) => {
   let user
   let token
+  let refreshTimer
 
   options = extend({ cookie: 'XSRF-TOKEN' }, options)
 
@@ -64,7 +65,7 @@ module.exports = (options) => {
       if (token) { this.setToken(token) }
       refreshToken()
 
-      setInterval(refreshToken, refreshInterval)
+      refreshTimer = setInterval(refreshToken, refreshInterval)
     },
 
     setToken (newToken) {
@@ -78,6 +79,12 @@ module.exports = (options) => {
       logger.info('[JWT store] refreshing token', token)
       options.refresh(token)
       .then(tokenStore.setToken.bind(tokenStore))
+    },
+
+    terminate () {
+      user = undefined
+      token = undefined
+      clearInterval(refreshTimer)
     }
   }, EventEmitter.prototype)
 
