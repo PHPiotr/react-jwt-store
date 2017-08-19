@@ -219,4 +219,57 @@ describe('Token Store', () => {
       assert.equal(tokenFromStore, token)
     })
   })
+
+  describe('terminate', () => {
+    let cookieMonster
+    beforeEach(() => {
+      cookieMonster = require('cookie-monster')
+      cookieMonster.set('XSRF-TOKEN', token)
+    })
+    it('should set token to undefined on explicit termination', done => {
+      let callCount = 0
+      const tokenStore = require('../src')({
+        refresh: (t) => {
+          if (callCount === 0) {
+            cookieMonster.set('XSRF-TOKEN', token, {expires: 'Thu, 01 Jan 1970 00:00:01 GMT'})
+            assert.equal(t, token)
+          }
+          if (callCount === 1) {
+            assert.equal(t, undefined)
+          }
+          callCount++
+
+          return bluebird.resolve(t)
+        }
+      })
+      tokenStore.init()
+      tokenStore.terminate()
+      tokenStore.refreshToken()
+      done()
+    })
+
+    it('should not set token to undefined when no explicit termination', done => {
+      let callCount = 0
+      const tokenStore = require('../src')({
+        refresh: (t) => {
+          if (!t) {
+            return bluebird.resolve()
+          }
+          if (callCount === 0) {
+            cookieMonster.set('XSRF-TOKEN', token, {expires: 'Thu, 01 Jan 1970 00:00:01 GMT'})
+            assert.equal(t, token)
+          }
+          if (callCount === 1) {
+            assert.equal(t, token)
+          }
+          callCount++
+
+          return bluebird.resolve(t)
+        }
+      })
+      tokenStore.init()
+      tokenStore.refreshToken()
+      done()
+    })
+  })
 })
